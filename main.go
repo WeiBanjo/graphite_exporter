@@ -42,6 +42,8 @@ var (
 	mappingConfig   = flag.String("graphite.mapping-config", "", "Metric mapping configuration file name.")
 	sampleExpiry    = flag.Duration("graphite.sample-expiry", 5*time.Minute, "How long a sample is valid for.")
 	strictMatch     = flag.Bool("graphite.mapping-strict-match", false, "Only store metrics that match the mapping configuration.")
+	listenTLScert   = flag.String("web.listen-tls-cert", "", "Path to a TLS cert file.")
+	listenTLSkey    = flag.String("web.listen-tls-key", "", "Path to a TLS key file.")
 	lastProcessed   = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "graphite_last_processed_timestamp_seconds",
@@ -259,5 +261,9 @@ func main() {
 	})
 
 	log.Infoln("Listening on", *listenAddress)
-	log.Fatal(http.ListenAndServe(*listenAddress, nil))
+	if *listenTLScert != "" && *listenTLSkey != "" {
+		log.Fatal(http.ListenAndServeTLS(*listenAddress, *listenTLScert, *listenTLSkey, nil))
+	} else {
+		log.Fatal(http.ListenAndServe(*listenAddress, nil))
+	}
 }
